@@ -25,14 +25,11 @@ Route::group(['middleware' => ['json.response']], function () {
 
     /*NO IMPLEMENT AUTH ROUTES*/
     Route::namespace('Api\Auth')/*->name('api.')*/->group(function() {
-        Route::post('login',    'AuthController@login');
-        Route::post('register', 'AuthController@register');
+        Route::post('login',   'AuthController@login');
+        Route::post('register','AuthController@register');
         Route::post('refresh', 'AuthController@refresh');
-
-        Route::get('verify-email/{token}', 'EmailVerificationController@verify')->name('email-verify');
-
-        //    Route::post('recover', 'Api\Auth\AuthController@recover');
-        //    Route::post('change', 'Api\Auth\AuthController@change');
+        Route::post('recover', 'AuthController@recover');
+        Route::post('change',  'AuthController@change');
     });
 
     /*AUTHENTICATED ROUTES*/

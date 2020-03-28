@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Auth\ChangePasswordApiRequest;
 use App\Http\Requests\Api\Auth\LoginApiRequest;
+use App\Http\Requests\Api\Auth\RecoverPasswordApiRequest;
 use App\Http\Requests\Api\Auth\RegisterApiRequest;
 use App\Mail\NewUserRegistered;
+use App\Mail\UserPasswordPin;
 use App\Models\User;
 use App\Notifications\Emails\SignupActivate;
 use GuzzleHttp\Exception\BadResponseException;
@@ -197,6 +200,67 @@ class AuthController extends Controller
         }
 
     }
+
+
+    public function recover(RecoverPasswordApiRequest $request){
+        //TODO: Check if email exists
+        $user = User::where(['email' => $request->email])->first();
+        if (is_null($user)){
+            return $this->specialResponse([
+                'access_token'  => null,
+                'token_type'    => null,
+                'expires_at'    => null,
+                'status'        => 'Error',
+                'code'          => 404,
+                'message'       => 'Email does match our records',
+                'data'          => []
+            ],404);
+        }
+
+        //TODO: Send the recover password to link that email
+        $pin = rand(111111, 999999);
+        foreach ($this->unwantedPins as $unwantedPin){
+            if ($pin == $unwantedPin){
+                $pin = rand(111111, 999999);
+            }
+        }
+
+        $user->pin = $pin;
+        $user->save();
+
+        Mail::to($user)->queue( new UserPasswordPin( $pin ) );
+
+        return $this->specialResponse([
+            'access_token'  => null,
+            'token_type'    => null,
+            'expires_at'    => null,
+            'status'        => 'Successfully',
+            'code'          => 200,
+            'message'       => 'A six digit pin number has been sent to your email address',
+            'data'          => []
+        ],200);
+    }
+
+
+    public function change(ChangePasswordApiRequest $request){
+        //TODO: Find user by pin
+        $user = User::where(['pin' => $request->pin])->first();
+        if (is_null($user)){
+            return response([
+                'error' => 'user pin incorrect'
+            ], 404);
+        }
+
+        //TODO: Change the password wit the new one
+        $user->password = Hash::make( $request->password );
+        $user->pin = null;
+        $user->save();
+
+        return response([
+            'message' => 'Please login with your new password'
+        ], 200);
+    }
+
 
     public function refresh(Request $request){
         $refresh_token = $request->header('Refresh-Token');

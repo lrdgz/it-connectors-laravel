@@ -43,15 +43,15 @@ class AuthController extends Controller
     }
 
 
-    private function inUnWanted($pin){
-        return in_array( $pin, $this->unwantedPins );
-    }
-
     private $unwantedPins = [
         111111,222222,333333,
         444444,555555,666666,
         777777,888888,999999
     ];
+
+    private function inUnWanted($pin){
+        return in_array( $pin, $this->unwantedPins );
+    }
 
     /**
      * Create user
@@ -86,11 +86,12 @@ class AuthController extends Controller
 
         //Notify user registered
         //$user->notify(new SignupActivate($user));
-        //Mail::to( $user )->queue( new NewUserRegistered( $token ) );
+
+        //Send mail to user to confirm account
+        Mail::to( $user )->queue( new NewUserRegistered( $token ) );
 
         $this->CLIENT_MODE = env('CLIENT_MODE');
 
-//        https://stackoverflow.com/questions/45010982/how-can-i-create-a-token-for-a-password-grant-client-using-laravel-passport
 //        try {
             if ($this->CLIENT_MODE == 1) {
                 return $this->getTokenAndRefreshToken($this->client, $request->email, $request->password);
@@ -198,10 +199,34 @@ class AuthController extends Controller
     }
 
     public function refresh(Request $request){
-        $this->validate($request, [
-            'refresh_token' => 'required'
-        ]);
-        return $this->issueToken($request, 'refresh_token');
+        $refresh_token = $request->header('Refresh-Token');
+        $oClient = $this->client;
+        $http = new Client();
+        $url = env('APP_URL');
+
+        try {
+            $response = $http->request('POST', "{$url}/oauth/token", [
+                'form_params' => [
+                    'grant_type' => 'refresh_token',
+                    'refresh_token' => $refresh_token,
+                    'client_id' => $oClient->id,
+                    'client_secret' => $oClient->secret,
+                    'scope' => '',
+                ],
+            ]);
+
+            return json_decode((string) $response->getBody(), true);
+        } catch (\Exception $e) {
+            return $this->specialResponse([
+                'access_token'  => null,
+                'token_type'    => null,
+                'expires_at'    => null,
+                'status'        => 'Unauthorized',
+                'code'          => 401,
+                'message'       => 'Unauthorized',
+                'data'          => []
+            ],401);
+        }
     }
 
     /**

@@ -11,7 +11,7 @@ php:
   - 7.4
 
 addons:
-  mariadb: 10.4
+  mariadb: '10.4'
 
 cache:
   directories:
@@ -25,13 +25,14 @@ before_script:
   - composer install --no-interaction
   - php artisan key:generate
   - php artisan migrate --no-interaction -vvv
-  - php artisan migrate --seed
+  #- php artisan migrate --seed
 
 script:
   - vendor/bin/phpunit
 
 services:
   - mysql
+  - postgresql
 
 notifications:
   #email: false

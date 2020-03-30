@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Api\Comments;
+namespace App\Http\Controllers\Api\Posts;
 
 use App\Http\Controllers\Controller;
+use App\Models\Comment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
@@ -12,9 +14,18 @@ class CommentController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $comments = Comment::where('post_id', $request->id)->get();
+
+        foreach ($comments as $comment){
+            $comment->user;
+        }
+
+        return response()->json([
+            'success' => true,
+            'comments' => $comments
+        ]);
     }
 
     /**
@@ -25,7 +36,16 @@ class CommentController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $comment = new Comment();
+        $comment->user_id = Auth::user()->id;
+        $comment->post_id = $request->id;
+        $comment->comment = $request->comment;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Comment added'
+        ]);
+
     }
 
     /**
@@ -46,9 +66,11 @@ class CommentController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        //
+        dd($request->all());
+        $comment = Comment::find($request->id);
+
     }
 
     /**

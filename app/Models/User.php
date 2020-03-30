@@ -27,7 +27,12 @@ class User extends Authenticatable
 
     const USERS_ROLES = [self::ADMIN, self::USER, self::SUPPORT, self::AGENT];
 
-
+    /**
+     * The attributes that aren't mass assignable.
+     *
+     * @var array
+     */
+    protected $guarded = ['id'];
 
     /**
      * The attributes that are mass assignable.
@@ -35,8 +40,9 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'email', 'password', 'avatar', 'access', 'active',
-        'verified_email', 'verified_mobile', 'email_token', 'mobile_token', 'email_verified_at'
+        'email', 'password', 'access', 'active',
+        'verified_email', 'verified_mobile', 'email_token', 'mobile_token', 'email_verified_at',
+        'last_logged_at','last_login_ip'
     ];
 
     protected $dates = ['deleted_at'];
@@ -48,7 +54,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password', 'remember_token',
-        'email_token', 'mobile_token'.
+        'email_token', 'mobile_token',
         'pin'
     ];
 
@@ -59,5 +65,20 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'last_logged_at'    => 'datetime',
     ];
+
+    public function profile(){
+        return $this->hasOne(Profile::class);
+    }
+
+    public function posts(){
+        return $this->hasMany(Post::class);
+    }
+
+    public function comments(){
+        return $this->hasMany(Comment::class);
+    }
+
+
 }

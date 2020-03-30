@@ -32,12 +32,19 @@ Route::group(['middleware' => ['json.response']], function () {
         Route::post('change',  'AuthController@change');
     });
 
+
     /*AUTHENTICATED ROUTES*/
     Route::middleware(['auth:api', 'CheckClientCredentials', 'verified_email', 'is_active'])->namespace('Api')->group(function(){
         Route::post('logout', 'Auth\AuthController@logout');
+        Route::resource('posts', 'Posts\PostController')->except(['create', 'edit']);
+        Route::resource('comments', 'Posts\CommentController')->except(['create', 'edit']);
     });
 
 });
+
+
+/*POST ROUTES*/
+//Route::resource('posts', 'Api\Posts\PostController');
 
 
 //Route::post('recover', 'Api\Auth\AuthController@recover');
